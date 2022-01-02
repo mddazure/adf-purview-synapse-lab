@@ -5,7 +5,8 @@ A lab environment for network experimentation with Azure Data Factory, Purview a
 ![image](images/adf-pvw-syn-lab.png)
 
 ## Deployment
-Log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
+Log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash.
+
 Ensure Azure CLI and extensions are up to date:
   
 `az upgrade --yes`
@@ -41,7 +42,9 @@ The VMs are created from an image that already contains the Self-hosted Integrat
 Each of the Shir VMs needs to be configured to connect to its respective service, per the documentation for [ADF](https://docs.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime?tabs=data-factory#create-a-self-hosted-ir-via-ui), [Purview](https://docs.microsoft.com/en-us/azure/purview/manage-integration-runtimes) and [Synapse]().
 
 VM Credentials:
+
 adminUsername = AzureAdmin
+
 adminPassword = Adfpvwsyn-21
 
 ### Hub VNET
