@@ -1,6 +1,6 @@
 # Adf-Purview-Synapse Lab
 
-A lab environment deployed through bicep for network experimentation with Azure Data Factory, Purview and Synapse.
+A lab environment for network experimentation with Azure Data Factory, Purview and Synapse.
 
 ![image](images/adf-pvw-syn-lab.png)
 
