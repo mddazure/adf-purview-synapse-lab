@@ -23,7 +23,7 @@ param AdminPassWord string
 
 var P2SRootcert = 'MIIC5zCCAc+gAwIBAgIQZztZYHmjtL5NxRSFqeFj8TANBgkqhkiG9w0BAQsFADAWMRQwEgYDVQQDDAtQMlNSb290Q2VydDAeFw0yMTA0MDMxMzEzNDhaFw0yMjA0MDMxMzMzNDhaMBYxFDASBgNVBAMMC1AyU1Jvb3RDZXJ0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsrCNfBxfFd3zwEwkUsiQI++7vawcjlgGlRSWxgETkwxWHN/PMz9yZy6mPe2+3x+/fuqOVUCt0tKi0KjBT5LsMKEGby23m6RbRJ9FV8Hvkx2TY7q0e+6jFRDbNB+Vosx7ta+Rx/IytJ8GEJTq0KHht36XivgtO/HnsLYS0wcUidD9yo4aYzTGiq6x/Ir9Xn9mkJYnb6t8MDpN9HU22XX9YbINo/WDt8pVKF7oILkeJ81UJbpRHGEaEKrdvp0fA0zqyE/IErUzKK8wdJp8XQeOChwWAkJYLk41iN5xKIyNB/QkSjeZwerP7ZlsEoYc604q16ms4UYktKqzISn+M2RhxQIDAQABozEwLzAOBgNVHQ8BAf8EBAMCAgQwHQYDVR0OBBYEFIzIo1ejScaSuToAEVq7WertaUfqMA0GCSqGSIb3DQEBCwUAA4IBAQCyF/PaJGECjqzuIpAUkOpHkogkM8zLapOThwkpT7VXnO0EL0G+6FDimGJjMN3oo9bzwdBEMzz+1fIIg+OfTGwERvq3wqybc/81HqMnvFb+nR1hTFT8yh025HJMlT06VZ0dhgIRpGor0exWomeZINdUvkKWTUchIam813hM7LEHhvWXVk//7hrOjeD8k+KbGaujOEY4+jLUhvXnXrlzZTRNrA3glQuhm7Gf5zllKDeqIGmn3LG6OZ9OsDSB9zkP6a5bOP6HaqE7i4TQxlidE7+LiY8YN5VLorHUTER4xivUDUoLAOOe+NC0ov+7QApAibH5AKgoN4SGt5wF9ZtcpdkK'
 var vpnpool = '172.16.0.0/24'
-var VMName = 'dns'
+var VMName = 'hubVM'
 
 var imageId = '/subscriptions/0245be41-c89b-4b46-a3cc-a705c90cd1e8/resourceGroups/image-gallery-rg/providers/Microsoft.Compute/galleries/mddimagegallery/images/windows2022-networktools/versions/2.0.0'
 //var imagePublisher = 'MicrosoftWindowsServer'
@@ -238,7 +238,7 @@ resource nicdns 'Microsoft.Network/networkInterfaces@2021-05-01'={
     ]
   }
 }
-resource dns 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+resource hubVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: VMName
   location: location
   properties:{
@@ -271,6 +271,23 @@ resource dns 'Microsoft.Compute/virtualMachines@2020-12-01' = {
     }  
   }
 }
+resource ext 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
+  name: 'ext'
+  parent: hubVM
+  location: location
+  properties:{
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.9'
+    autoUpgradeMinorVersion: true
+    protectedSettings:{}
+    settings: {
+        commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-DnsServerForwarder -IPAddress 168.63.129.16 -PassThru; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
+    }
+  }  
+}
+
+
 //Bastion
 resource bastionPubip 'Microsoft.Network/publicIPAddresses@2021-03-01' ={
   name: '${VnetName}-bastionPubip'
