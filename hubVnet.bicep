@@ -349,8 +349,8 @@ resource adfhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
       id: hubvnet.id
     }
     allowForwardedTraffic: true
-    allowGatewayTransit: true
-    useRemoteGateways: false
+    allowGatewayTransit: false
+    useRemoteGateways: true
   }
 }
 resource hubpvwpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
@@ -367,15 +367,15 @@ resource hubpvwpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
   }
 }
 resource pvwhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
-  name:'${PvwVnetName}/adfhubpeer'
+  name:'${PvwVnetName}/pvwhubpeer'
   properties:{
     peeringState: 'Connected'
     remoteVirtualNetwork:{
       id: hubvnet.id
     }
     allowForwardedTraffic: true
-    allowGatewayTransit: true
-    useRemoteGateways: false
+    allowGatewayTransit: false
+    useRemoteGateways: true
   }
 }
 resource hubsynpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
@@ -392,15 +392,15 @@ resource hubsynpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
   }
 }
 resource synhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
-  name:'${SynVnetName}/adfhubpeer'
+  name:'${SynVnetName}/synhubpeer'
   properties:{
     peeringState: 'Connected'
     remoteVirtualNetwork:{
       id: hubvnet.id
     }
     allowForwardedTraffic: true
-    allowGatewayTransit: true
-    useRemoteGateways: false
+    allowGatewayTransit: false
+    useRemoteGateways: true
   }
 }
 //DNS Zones & links
