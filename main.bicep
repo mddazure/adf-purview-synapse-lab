@@ -1,4 +1,4 @@
-param rgName string = 'adf-pvw-syn-1'
+param rgName string = 'adf-pvw-syn'
 param location string = 'westeurope'
 
 param hubVnetName string = 'hubVnet'
