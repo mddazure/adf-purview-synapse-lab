@@ -331,6 +331,9 @@ resource hubBastion 'Microsoft.Network/bastionHosts@2020-11-01' = {
 resource hubadfpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
   name:'hubadfpeer'
   parent:hubvnet
+  dependsOn:[
+    vnetgateway
+  ]
   properties:{
     peeringState: 'Connected'
     remoteVirtualNetwork:{
@@ -343,6 +346,9 @@ resource hubadfpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
 }
 resource adfhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
   name:'${AdfVnetName}/adfhubpeer'
+  dependsOn:[
+    vnetgateway
+  ]
   properties:{
     peeringState: 'Connected'
     remoteVirtualNetwork:{
@@ -355,6 +361,9 @@ resource adfhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
 }
 resource hubpvwpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
   name:'hubpvwpeer'
+  dependsOn:[
+    vnetgateway
+  ]
   parent:hubvnet
   properties:{
     peeringState: 'Connected'
@@ -368,6 +377,9 @@ resource hubpvwpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
 }
 resource pvwhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
   name:'${PvwVnetName}/pvwhubpeer'
+  dependsOn:[
+    vnetgateway
+  ]
   properties:{
     peeringState: 'Connected'
     remoteVirtualNetwork:{
@@ -380,6 +392,9 @@ resource pvwhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
 }
 resource hubsynpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
   name:'hubsynpeer'
+  dependsOn:[
+    vnetgateway
+  ]
   parent:hubvnet
   properties:{
     peeringState: 'Connected'
@@ -393,6 +408,9 @@ resource hubsynpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@20
 }
 resource synhubpeer 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-05-01'={
   name:'${SynVnetName}/synhubpeer'
+  dependsOn:[
+    vnetgateway
+  ]
   properties:{
     peeringState: 'Connected'
     remoteVirtualNetwork:{
