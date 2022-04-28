@@ -88,6 +88,8 @@ resource syn 'Microsoft.Synapse/workspaces@2021-06-01' = {
     }
     managedResourceGroupName: '${SynName}-managed'
     publicNetworkAccess: 'Enabled'
+    managedVirtualNetwork: 'default'
+    managedVirtualNetworkSettings: {}
   }
 }
 resource synShir 'Microsoft.Synapse/workspaces/integrationRuntimes@2021-06-01' = {
