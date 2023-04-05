@@ -39,7 +39,11 @@ The template creates ADF, Purview and Synapse accounts. Public Network Access is
 
 The template provisions Self-hosted Integration Runtimes in the ADF and Synapse accounts. Purview does not have the capability to provision Self-hosted Integration Runtimes via code.
 
-The ADF account has Linked Services to the storage accounts in the *adf-pvw-syn-linkedservices* RG, the Synapse account has a Default Data Lake Storage link to the data lake account.
+The ADF account has Linked Services to the storage accounts in the *adf-pvw-syn-linkedservices* RG. 
+
+The Synapse account has a Default Data Lake Storage link to the data lake account.
+
+The lab also enables experimentation with accessing on-prem services from ADF, as described in [How to access on-premises SQL Server from Data Factory Managed VNet using Private Endpoint](https://learn.microsoft.com/en-us/azure/data-factory/tutorial-managed-virtual-network-on-premise-sql-server). It contains all components described in this article, except for the on-premise SQL server VM. This needs to deployed separately from the Marketplace. The nat VM in the Hub still needs to be configured as described in the article.
 
 ### VNETs with Self-hosted runtime VMs
 The template deploys VNETs containing the adfShir, pvwShir and synShir VMs respectively. 
@@ -54,10 +58,15 @@ adminUsername = AzureAdmin
 
 adminPassword = Adfpvwsyn-21
 
+### ADF Managed VNET
+The template creates an ADF Managed VNET with Managed IR and a Managed Private Endpoint to the Private Link Service in the Hub VNET are deployed. 
+
 ### Hub VNET
 The Hub VNET is peered with each of the Shir VNETs. It contains a central Bastion instance, a VM (credentials above) and a VNET Gateway with OpenVPN P2S configuration.
 
 The Hub VNET contains Private Endpoints connected to the blob storage and data lake accounts. Private DNS zones contain A records for the PEs and are linked to the Hub VNET and the Shir VNETs. 
+
+The Hub VNET contains an Internal Load Balancer with Private Link Service, to enable a Managed Private Endpoint to connect into the hub.
 
 The lab deployment configured the data services for public access. When they are reconfigured for private access, a P2S VPN connection can be used to connect via Private Endpoints. 
 
@@ -76,6 +85,10 @@ The Hub VNET VPN Gateway is configured for OpenVPN with certicate authentication
 - In the Azure VPN Client, click on the '+' in the lower left corner, and select the azurevpnconfig.xml just modified
 - Install the certificate by double clicking and accepting the wizard defaults. The private key password is 'Nienke04'.
 - In the Azure VPN Client, click Connect.
+
+### Onprem VNET
+The Onprem VNET is connected to the Hub via a S2S VPN connection with BGP.
+
 
 
 
