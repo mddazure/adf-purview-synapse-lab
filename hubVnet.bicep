@@ -383,8 +383,7 @@ resource nicdns 'Microsoft.Network/networkInterfaces@2021-05-01'={
       name: 'ipconfig1'
       properties:{
         primary: true
-        privateIPAllocationMethod: 'Static'
-        privateIPAddress: '10.0.0.4'
+        privateIPAllocationMethod:  'Dynamic'
         privateIPAddressVersion: 'IPv4'
         subnet:{
           id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
