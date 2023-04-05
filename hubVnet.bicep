@@ -7,6 +7,13 @@ param PeSubnet string
 param BastionSubnet string
 param GatewaySubnet string
 
+param OnpremVnetName string
+param OnpremVnet string 
+param OnpremVMSubnet string
+param OnpremBastionSubnet string
+param OnpremGatewaySubnet string
+
+
 param AdfVnetId string
 param PvwVnetId string
 param SynVnetId string
@@ -25,10 +32,17 @@ var P2SRootcert = 'MIIC5zCCAc+gAwIBAgIQF5q+TGAQ+o9AueLqAuog+TANBgkqhkiG9w0BAQsFA
 var vpnpool = '172.16.0.0/24'
 var VMName = 'hubVM'
 
+var NATVM1Name = 'natVM1'
+var NATVM2Name = 'natVM2'
+
 var imageId = '/subscriptions/0245be41-c89b-4b46-a3cc-a705c90cd1e8/resourceGroups/image-gallery-rg/providers/Microsoft.Compute/galleries/mddimagegallery/images/windows2022-networktools/versions/2.0.0'
 //var imagePublisher = 'MicrosoftWindowsServer'
 //var imageOffer = 'WindowsServer'
 //var imageSku = '2022-Datacenter'
+
+var NATVMImagePublisher =  'canonical'
+var NATVMImageOffer = '0001-com-ubuntu-server-jammy'
+var NATVMImageSKU = '22_04-lts'
 
 //VNET
 resource hubvnet 'Microsoft.Network/virtualNetworks@2021-05-01'={
@@ -52,6 +66,7 @@ properties:{
       properties:{
         addressPrefix: PeSubnet
         privateEndpointNetworkPolicies: 'Disabled'
+        privateLinkServiceNetworkPolicies: 'Disabled'
       }
     }
     {
@@ -91,6 +106,60 @@ resource gwpubip 'Microsoft.Network/publicIPAddresses@2021-05-01'={
     publicIPAddressVersion: 'IPv4'
   }
 }
+
+//onpremVNET
+//VNET
+resource onpremvnet 'Microsoft.Network/virtualNetworks@2021-05-01'={
+  name: OnpremVnetName
+  location:location
+  properties:{
+    addressSpace:{
+      addressPrefixes: [
+        OnpremVnet
+      ]
+    }
+    subnets:[
+      {
+        name: 'vmsubnet'
+        properties:{
+          addressPrefix: OnpremVMSubnet
+        }
+      }
+      {
+        name: 'AzureBastionSubnet'
+        properties:{
+          addressPrefix: OnpremBastionSubnet
+        }
+      }
+      {
+        name: 'GatewaySubnet'
+        properties:{
+          addressPrefix: OnpremGatewaySubnet
+        }
+      }
+    ]
+  }
+}
+  //PIP
+  resource onpremgwpubip 'Microsoft.Network/publicIPAddresses@2021-05-01'={
+    name:'onpremgatewaypip'
+    location: location
+    sku:{
+      name: 'Standard'
+    }
+    zones:[
+      '1'
+      '2'
+      '3'
+    ]
+    properties:{
+      publicIPAllocationMethod: 'Static' 
+      publicIPAddressVersion: 'IPv4'
+    }
+  }
+
+
+
 //PE
 resource sourcepe 'Microsoft.Network/privateEndpoints@2021-05-01'= {
   name: 'sourcepe'
@@ -164,6 +233,42 @@ resource adlspe 'Microsoft.Network/privateEndpoints@2021-05-01'= {
   }
 }
 
+//onpremGateway
+resource onpremvnetgateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01'= {
+  name: 'onpremvnetgateway'
+  location:location
+  properties:{
+    ipConfigurations:[
+      {
+        name:'ipconfig1'
+        properties:{
+          privateIPAllocationMethod: 'Dynamic'
+          subnet:{
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets',onpremvnet.name,'GatewaySubnet')
+          }
+          publicIPAddress:{
+            id: onpremgwpubip.id
+          }
+        }
+      }
+    ]
+    gatewayType: 'Vpn'
+    vpnType: 'RouteBased'
+    vpnGatewayGeneration: 'Generation1'
+    enableBgp: true
+    bgpSettings: {
+      asn: 64001
+    }
+    enablePrivateIpAddress: false
+    activeActive: false
+    gatewayDefaultSite: null
+    sku:{
+      name: 'VpnGw1AZ'
+      tier: 'VpnGw1AZ'
+    }
+  }
+}
+
 //Gateway
 resource vnetgateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01'= {
   name: 'vnetgateway'
@@ -186,8 +291,11 @@ resource vnetgateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01'= {
     gatewayType: 'Vpn'
     vpnType: 'RouteBased'
     vpnGatewayGeneration: 'Generation1'
-    enableBgp: false
-    enablePrivateIpAddress: true
+    enableBgp: true
+    bgpSettings: {
+      asn: 64000
+    }
+    enablePrivateIpAddress: false
     activeActive: false
     gatewayDefaultSite: null
     sku:{
@@ -217,6 +325,54 @@ resource vnetgateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01'= {
     }
   }
 }
+
+resource hubonpremconn 'Microsoft.Network/connections@2022-09-01' = {
+  name: 'hubonpremconn'
+  location: location
+  properties: {
+    connectionType: 'Vnet2Vnet'
+    sharedKey: 'adf'
+    enableBgp: true
+
+    virtualNetworkGateway1: {
+      id: vnetgateway.id
+      properties: {
+
+      }
+    }
+    virtualNetworkGateway2: {
+      id: onpremvnetgateway.id
+      properties: {
+
+      }
+    }
+  }
+}
+
+resource onpremhubconn 'Microsoft.Network/connections@2022-09-01' = {
+  name: 'onpremhubconn'
+  location: location
+  properties: {
+    connectionType: 'Vnet2Vnet'
+    sharedKey: 'adf'
+    enableBgp: true
+
+    virtualNetworkGateway2: {
+      id: vnetgateway.id
+      properties: {
+
+      }
+    }
+    virtualNetworkGateway1: {
+      id: onpremvnetgateway.id
+      properties: {
+
+      }
+    }
+  }
+}
+
+
 //VM
 resource nicdns 'Microsoft.Network/networkInterfaces@2021-05-01'={
   name: '${VMName}-nic'
@@ -287,6 +443,149 @@ resource ext 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
   }  
 }
 
+//NATVM1
+resource nicNATVM1 'Microsoft.Network/networkInterfaces@2021-05-01'={
+  name: '${NATVM1Name}-nic'
+  location: location
+  properties:{
+    enableIPForwarding: true
+    ipConfigurations:[
+      {
+      name: 'ipconfig1'
+      properties:{
+        loadBalancerBackendAddressPools: [
+          {id: lb.properties.backendAddressPools[0].id}
+        ]
+        primary: true
+        privateIPAllocationMethod: 'Static'
+        privateIPAddress: '10.0.0.100'
+        privateIPAddressVersion: 'IPv4'
+        subnet:{
+          id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
+          }
+        }
+      }
+    ]
+  }
+}
+
+resource NATVM1 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+  name: NATVM1Name
+  location: location
+  properties:{
+    hardwareProfile: {
+      vmSize: 'Standard_DS2_v2'
+    }
+    storageProfile:{
+      imageReference: {
+        publisher: NATVMImagePublisher
+        offer: NATVMImageOffer
+        sku: NATVMImageSKU
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'      
+        }
+    }
+    osProfile:{
+        computerName: NATVM1Name
+        adminUsername: AdminUserName
+        adminPassword: AdminPassWord
+        }
+    networkProfile: {
+      networkInterfaces: [
+        {
+        id: nicNATVM1.id
+        }
+      ]
+    }  
+  }
+}
+
+//Loadbalancer
+
+resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
+  name: 'lb'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  properties:{
+    backendAddressPools: [
+      {
+        name: 'lbBEP'
+      }
+    ]
+    frontendIPConfigurations:[
+      {
+        name: 'lbFEP'
+        properties: {
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
+            
+          }
+        }
+      }
+    ]
+    probes: [
+      {
+        name: 'sshprobe'
+        properties:{
+          port: 22
+          protocol: 'Tcp'
+          probeThreshold: 3
+          intervalInSeconds: 10
+        }
+      }
+    ]
+    loadBalancingRules: [
+      {
+        name: 'haportrule'
+        properties: {
+          frontendIPConfiguration:{
+          id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations','lb','lbFEP')
+          }
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools','lb','lbBEP')
+          }
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes','lb','sshprobe')
+          }
+          protocol: 'All'
+          frontendPort: 0
+          backendPort: 0
+        }
+      }
+    ]
+  }
+}
+
+resource privatelinkService 'Microsoft.Network/privateLinkServices@2021-05-01' = {
+  name: 'pls'
+  location: location
+  properties: {
+    enableProxyProtocol: false
+    loadBalancerFrontendIpConfigurations: [
+      {
+        id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', lb.name, lb.properties.frontendIPConfigurations[0].name)
+      }
+    ]
+    ipConfigurations: [
+      {
+        name: 'pls-ipconfig'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          privateIPAddressVersion: 'IPv4'
+          subnet: {
+            id: hubvnet.properties.subnets[1].id
+          }
+          primary: true
+        }
+      }
+    ]
+  }
+}
 
 //Bastion
 resource bastionPubip 'Microsoft.Network/publicIPAddresses@2021-03-01' ={
@@ -305,13 +604,20 @@ resource bastionPubip 'Microsoft.Network/publicIPAddresses@2021-03-01' ={
     publicIPAllocationMethod: 'Static'
   }
 }
-resource hubBastion 'Microsoft.Network/bastionHosts@2020-11-01' = {
+resource hubBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
   name: '${VnetName}-Bastion'
+  sku: {
+    name: 'Standard'
+  }
   dependsOn:[
     hubvnet
   ]
   location: location
   properties: {
+    disableCopyPaste: false
+    enableFileCopy: true
+    enableIpConnect: true
+    enableShareableLink: true
     ipConfigurations: [
       {
         name: 'ipConf'
@@ -571,3 +877,5 @@ resource adlsdnslinkhub 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2
 }
 
 output vnetId string = hubvnet.id
+output plsId string = privatelinkService.id
+

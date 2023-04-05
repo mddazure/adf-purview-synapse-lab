@@ -1,4 +1,4 @@
-param rgName string = 'adf-pvw-syn'
+param rgName string = 'adf-pvw-syn-3'
 param location string = 'westeurope'
 
 param hubVnetName string = 'hubVnet'
@@ -7,6 +7,13 @@ param hubVMSubnet string = '10.0.0.0/24'
 param hubPeSubnet string = '10.0.1.0/24'
 param hubBastionSubnet string = '10.0.2.0/24'
 param hubGatewaySubnet string = '10.0.255.0/24'
+
+param onpremVnetName string = 'onpremVnet'
+param onpremVnet string = '172.17.0.0/16'
+param onpremVMSubnet string = '172.17.0.0/24'
+param opremBastionSubnet string = '172.17.1.0/24'
+param onpremGatewaySubnet string = '172.17.2.0/24'
+
 
 param adfVnetName string = 'adfVnet'
 param adfVnet string = '10.1.0.0/16'
@@ -39,6 +46,8 @@ param adfSource string = 'DefaultEndpointsProtocol=https;AccountName=adfsourcemd
 param adfSourceId string ='/subscriptions/0245be41-c89b-4b46-a3cc-a705c90cd1e8/resourceGroups/adf-pvw-syn-linkedservices/providers/Microsoft.Storage/storageAccounts/adfsourcemdd'
 param adfDest string = 'DefaultEndpointsProtocol=https;AccountName=adfdestmdd;AccountKey=srGPFyUqVKaL6tOa7jrJUppGc13pmlBcjAm16u7JocJkqMf9OG7x4P4RkVm5zMbJ5D2PdmELy8C0HuT5l/lOXA=='
 param adfDestId string = '/subscriptions/0245be41-c89b-4b46-a3cc-a705c90cd1e8/resourceGroups/adf-pvw-syn-linkedservices/providers/Microsoft.Storage/storageAccounts/adfdestmdd'
+
+param adfMgdVnetName string = 'adf-mdd-mgdvnet'
 
 param pvwName string = 'pvw-mdd'
 
@@ -126,6 +135,12 @@ module hubMod 'hubVnet.bicep' ={
     BastionSubnet: hubBastionSubnet
     GatewaySubnet: hubGatewaySubnet
 
+    OnpremVnetName: onpremVnetName
+    OnpremVnet: onpremVnet
+    OnpremVMSubnet: onpremVMSubnet
+    OnpremBastionSubnet: opremBastionSubnet
+    OnpremGatewaySubnet: onpremGatewaySubnet
+
     AdfVnetId: adfMod.outputs.vnetId
     PvwVnetId: pvwMod.outputs.vnetId
     SynVnetId: synMod.outputs.vnetId
@@ -154,6 +169,9 @@ module dsMod 'dataServices.bicep' = {
     AdfSource: adfSource
     AdfDest: adfDest
     AdfVnetId: adfMod.outputs.vnetId
+    PlsId: hubMod.outputs.plsId
+
+    AdfMgdVnetName: adfMgdVnetName
 
     PvwName: pvwName
     PvwVnetId: pvwMod.outputs.vnetId
