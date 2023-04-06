@@ -59,6 +59,9 @@ properties:{
       name: 'vmsubnet'
       properties:{
         addressPrefix: VMSubnet
+        networkSecurityGroup: {
+          id: hubVnetvmsubnetnsg.id
+        }
       }
     }
     {
@@ -460,6 +463,13 @@ resource NATVM1Pubip 'Microsoft.Network/publicIPAddresses@2021-03-01' ={
   }
 }
 
+resource hubVnetvmsubnetnsg 'Microsoft.Network/networkSecurityGroups@2022-09-01'= {
+  name: 'hubVnet-vmsubnet-nsg'
+  location: location
+  properties: {
+    securityRules:[]
+  }
+}
 
 resource nicNATVM1 'Microsoft.Network/networkInterfaces@2021-05-01'={
   name: '${NATVM1Name}-nic'
@@ -480,9 +490,11 @@ resource nicNATVM1 'Microsoft.Network/networkInterfaces@2021-05-01'={
         subnet:{
           id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
           }
-        publicIPAddress: NATVM1Pubip
+        publicIPAddress: {
+          id: NATVM1Pubip.id
         }
       }
+    }
     ]
   }
 }
