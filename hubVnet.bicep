@@ -443,6 +443,24 @@ resource ext 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
 }
 
 //NATVM1
+resource NATVM1Pubip 'Microsoft.Network/publicIPAddresses@2021-03-01' ={
+  name: '${VnetName}-NATVM1Pubip'
+  location: location
+  sku:{
+    name:'Standard'
+  }
+  zones:[
+    '1'
+    '2'
+    '3'
+  ]
+  properties:{
+    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+
 resource nicNATVM1 'Microsoft.Network/networkInterfaces@2021-05-01'={
   name: '${NATVM1Name}-nic'
   location: location
@@ -462,6 +480,7 @@ resource nicNATVM1 'Microsoft.Network/networkInterfaces@2021-05-01'={
         subnet:{
           id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
           }
+        publicIPAddress: NATVM1Pubip
         }
       }
     ]
