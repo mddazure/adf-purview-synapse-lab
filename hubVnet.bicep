@@ -6,6 +6,8 @@ param VMSubnet string
 param PeSubnet string 
 param BastionSubnet string
 param GatewaySubnet string
+param Dnsip string
+param NatLbIp string
 
 param OnpremVnetName string
 param OnpremVnet string 
@@ -386,8 +388,9 @@ resource nicdns 'Microsoft.Network/networkInterfaces@2021-05-01'={
       name: 'ipconfig1'
       properties:{
         primary: true
-        privateIPAllocationMethod:  'Dynamic'
+        privateIPAllocationMethod:'Static'
         privateIPAddressVersion: 'IPv4'
+        privateIPAddress: Dnsip
         subnet:{
           id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
           }
@@ -553,8 +556,9 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
         properties: {
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets',hubvnet.name,'vmsubnet')
-            
           }
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: NatLbIp
         }
       }
     ]

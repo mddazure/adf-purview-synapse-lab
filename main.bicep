@@ -4,6 +4,8 @@ param location string = 'westeurope'
 param hubVnetName string = 'hubVnet'
 param hubVnet string = '10.0.0.0/16'
 param hubVMSubnet string = '10.0.0.0/24'
+param dnsIp string = '10.0.0.4'
+param natLbIp string = '10.0.0.15'
 param hubPeSubnet string = '10.0.1.0/24'
 param hubBastionSubnet string = '10.0.2.0/24'
 param hubGatewaySubnet string = '10.0.255.0/24'
@@ -131,6 +133,8 @@ module hubMod 'hubVnet.bicep' ={
     VnetName: hubVnetName
     Vnet: hubVnet
     VMSubnet: hubVMSubnet
+    Dnsip: dnsIp
+    NatLbIp: natLbIp
     PeSubnet: hubPeSubnet  
     BastionSubnet: hubBastionSubnet
     GatewaySubnet: hubGatewaySubnet
